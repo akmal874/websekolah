@@ -11,6 +11,8 @@ Aplikasi ini pakai **HTML + CSS + JavaScript murni** (tanpa Next.js) dan **Supab
 3. Masuk menu **SQL Editor** → **New query**.
 4. Buka file `supabase-setup.sql`, salin **seluruh isinya**, tempel, klik **Run**.
    Ini otomatis membuat semua tabel, keamanan (RLS), bucket gambar, dan data awal (termasuk 4 jurusan).
+5. Buka juga file `supabase-tambahan.sql`, salin isinya, tempel di query baru, klik **Run**.
+   Ini menambah tabel Profil dan kolom detail jurusan untuk halaman-halaman terpisah.
 
 ## B. Ambil kunci koneksi
 
@@ -78,15 +80,24 @@ Keamanan ini diberlakukan **dua lapis**: di tampilan (menu disembunyikan) dan di
 
 ```
 smk-app/
-├── index.html            ← halaman publik (beranda)
+├── index.html            ← halaman publik (beranda, ringkasan semua)
+├── profil.html           ← halaman Profil
+├── jurusan.html          ← daftar jurusan
+├── jurusan-detail.html   ← detail satu jurusan
+├── berita.html           ← daftar semua berita
+├── berita-detail.html    ← isi lengkap satu berita
+├── galeri.html           ← galeri foto (dengan lightbox)
 ├── supabase-setup.sql    ← jalankan sekali di Supabase
+├── supabase-tambahan.sql ← jalankan setelahnya (profil & detail)
 ├── PANDUAN.md            ← file ini
 ├── css/
 │   ├── style.css         ← tampilan publik
+│   ├── pages.css         ← tampilan halaman terpisah
 │   └── admin.css         ← tampilan dashboard
 ├── js/
 │   ├── config.js         ← ISI kredensial Supabase di sini
-│   ├── main.js           ← memuat konten publik
+│   ├── main.js           ← memuat konten beranda
+│   ├── pages.js          ← memuat konten halaman terpisah
 │   ├── auth.js           ← login & role
 │   ├── crud.js           ← simpan/hapus + upload gambar
 │   └── dashboard.js      ← semua modul dashboard
@@ -94,6 +105,13 @@ smk-app/
     ├── index.html        ← login admin
     └── dashboard.html    ← panel admin
 ```
+
+## Struktur Menu (per halaman)
+
+- **Beranda** (`index.html`) — satu halaman berisi ringkasan: hero, statistik, jurusan ringkas, mitra, 3 berita terbaru, galeri ringkas, PPDB. Menu "Kontak" scroll ke footer.
+- **Profil, Jurusan, Berita, Galeri** — masing-masing halaman sendiri dengan konten lengkap.
+- Klik kartu berita/jurusan → halaman detailnya.
+- Menu navigasi tetap diatur dari dashboard (Super Admin → Menu Navigasi). Arahkan URL ke `profil.html`, `jurusan.html`, dst.
 
 ## Masalah umum
 

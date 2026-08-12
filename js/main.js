@@ -25,9 +25,9 @@ async function loadMenu(){
   const box=document.getElementById('menu'); if(!box) return;
   const { data } = await sb.from('nav_menu').select('*').eq('active',true).order('urutan');
   const items = (data&&data.length) ? data : [
-    {label:'Beranda',url:'index.html'},{label:'Profil',url:'#profil'},
-    {label:'Jurusan',url:'#jurusan'},{label:'Berita',url:'#berita'},
-    {label:'Galeri',url:'#galeri'},{label:'Kontak',url:'#kontak'}
+    {label:'Beranda',url:'index.html'},{label:'Profil',url:'profil.html'},
+    {label:'Jurusan',url:'jurusan.html'},{label:'Berita',url:'berita.html'},
+    {label:'Galeri',url:'galeri.html'},{label:'Kontak',url:'#kontak'}
   ];
   box.innerHTML = items.map(m=>`<a href="${esc(m.url)}">${esc(m.label)}</a>`).join('')
     + `<a class="btn-primary" href="#ppdb">Daftar PPDB</a>`;
@@ -74,14 +74,14 @@ async function loadBerita(){
   const { data,error } = await sb.from('berita').select('*').eq('published',true).order('tanggal',{ascending:false}).limit(3);
   if(error||!data||!data.length){ box.innerHTML='<div class="empty">Belum ada berita.</div>'; return; }
   box.innerHTML = data.map(b=>`
-    <div class="card">
+    <a class="card" href="berita-detail.html?id=${b.id}">
       <div class="img">${b.gambar_url?`<img src="${esc(b.gambar_url)}" alt="">`:''}</div>
       <div class="body">
         <div class="date">${tglID(b.tanggal)}</div>
         <h4>${esc(b.judul)}</h4>
         <p>${esc((b.ringkasan||b.isi||'').slice(0,110))}${(b.ringkasan||b.isi||'').length>110?'…':''}</p>
       </div>
-    </div>`).join('');
+    </a>`).join('');
 }
 
 // ---------- GALERI ----------

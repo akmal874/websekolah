@@ -8,6 +8,7 @@ const MODULES={
   ringkasan:{ label:'Ringkasan', icon:'📊', superOnly:false },
   berita:   { label:'Berita',    icon:'📰', superOnly:false }, // admin & super
   jurusan:  { label:'Jurusan',   icon:'🎓', superOnly:true  },
+  profil:   { label:'Profil Sekolah', icon:'🏫', superOnly:true },
   galeri:   { label:'Galeri',    icon:'🖼️', superOnly:true  },
   mitra:    { label:'Mitra DUDI',icon:'🤝', superOnly:true  },
   statistik:{ label:'Statistik', icon:'🔢', superOnly:true  },
@@ -48,6 +49,7 @@ function openModule(key){
   const c=document.getElementById('content'); c.innerHTML='<div class="panel">Memuat…</div>';
   ({
     ringkasan:renderRingkasan, berita:renderBerita, jurusan:renderJurusan,
+    profil:renderProfil,
     galeri:renderGaleri, mitra:renderMitra, statistik:renderStatistik,
     menu:renderMenu, ppdb:renderPPDB, pengaturan:renderPengaturan, pengguna:renderPengguna
   })[key]();
@@ -168,7 +170,13 @@ async function renderJurusan(){
         <div class="field"><label>Ikon (emoji)</label><input id="j-ikon" placeholder="⚓"></div>
         <div class="field"><label>Urutan</label><input type="number" id="j-urutan" value="1"></div>
       </div>
-      <div class="field"><label>Deskripsi</label><textarea id="j-deskripsi"></textarea></div>
+      <div class="field"><label>Deskripsi singkat</label><textarea id="j-deskripsi"></textarea></div>
+      <div class="field"><label>Detail lengkap (halaman detail)</label><textarea id="j-detail"></textarea></div>
+      <div class="field"><label>Prospek karier</label><textarea id="j-prospek"></textarea></div>
+      <div class="grid2">
+        <div class="field"><label>Upload gambar jurusan</label><input type="file" id="j-file" accept="image/*"></div>
+        <div class="field"><label>URL gambar (opsional)</label><input id="j-url" placeholder="https://…"></div>
+      </div>
       <div class="field"><label><input type="checkbox" id="j-active" checked> Tampilkan</label></div>
       <div class="row"><button class="btn" onclick="simpanJurusan()">Simpan</button><button class="btn btn-ghost" onclick="resetJurusan()">Batal</button></div>
     </div>
@@ -186,17 +194,64 @@ async function renderJurusan(){
       </tbody></table>
     </div>`;
 }
-function resetJurusan(){['j-id','j-nama','j-singkatan','j-ikon','j-deskripsi'].forEach(i=>document.getElementById(i).value='');document.getElementById('j-urutan').value='1';document.getElementById('j-active').checked=true;document.getElementById('j-form-title').textContent='Tambah Jurusan';}
-function editJurusan(j){document.getElementById('j-id').value=j.id;document.getElementById('j-nama').value=j.nama||'';document.getElementById('j-singkatan').value=j.singkatan||'';document.getElementById('j-ikon').value=j.ikon||'';document.getElementById('j-urutan').value=j.urutan||1;document.getElementById('j-deskripsi').value=j.deskripsi||'';document.getElementById('j-active').checked=!!j.active;document.getElementById('j-form-title').textContent='Edit Jurusan';window.scrollTo({top:0,behavior:'smooth'});}
+function resetJurusan(){['j-id','j-nama','j-singkatan','j-ikon','j-deskripsi','j-detail','j-prospek','j-url'].forEach(i=>document.getElementById(i).value='');document.getElementById('j-file').value='';document.getElementById('j-urutan').value='1';document.getElementById('j-active').checked=true;document.getElementById('j-form-title').textContent='Tambah Jurusan';}
+function editJurusan(j){document.getElementById('j-id').value=j.id;document.getElementById('j-nama').value=j.nama||'';document.getElementById('j-singkatan').value=j.singkatan||'';document.getElementById('j-ikon').value=j.ikon||'';document.getElementById('j-urutan').value=j.urutan||1;document.getElementById('j-deskripsi').value=j.deskripsi||'';document.getElementById('j-detail').value=j.detail||'';document.getElementById('j-prospek').value=j.prospek||'';document.getElementById('j-url').value=j.gambar_url||'';document.getElementById('j-active').checked=!!j.active;document.getElementById('j-form-title').textContent='Edit Jurusan';window.scrollTo({top:0,behavior:'smooth'});}
 async function simpanJurusan(){
   const id=document.getElementById('j-id').value;
   const nama=document.getElementById('j-nama').value.trim();
   if(!nama){toast('Nama wajib diisi.',false);return;}
-  const obj={nama,singkatan:document.getElementById('j-singkatan').value.trim(),ikon:document.getElementById('j-ikon').value.trim()||'📘',urutan:parseInt(document.getElementById('j-urutan').value)||1,deskripsi:document.getElementById('j-deskripsi').value.trim(),active:document.getElementById('j-active').checked};
+  const gambar=await resolveGambar('j-file','j-url');
+  const obj={nama,singkatan:document.getElementById('j-singkatan').value.trim(),ikon:document.getElementById('j-ikon').value.trim()||'📘',urutan:parseInt(document.getElementById('j-urutan').value)||1,deskripsi:document.getElementById('j-deskripsi').value.trim(),detail:document.getElementById('j-detail').value.trim(),prospek:document.getElementById('j-prospek').value.trim(),active:document.getElementById('j-active').checked};
+  if(gambar) obj.gambar_url=gambar;
   const ok=id?await db.update('jurusan',id,obj):await db.insert('jurusan',obj);
   if(ok){resetJurusan();renderJurusan();}
 }
 async function hapusJurusan(id){if(await db.remove('jurusan',id))renderJurusan();}
+
+// ================= PROFIL SEKOLAH (super) =================
+async function renderProfil(){
+  const c=document.getElementById('content');
+  const { data }=await sb.from('profil').select('*').eq('id',1).single();
+  const p=data||{};
+  c.innerHTML=`
+    <div id="toast" class="msg"></div>
+    <div class="panel">
+      <h2>Profil Sekolah</h2>
+      <p class="desc">Konten ini tampil di halaman Profil. Misi & Fasilitas: tulis satu item per baris.</p>
+      <div class="field"><label>Sejarah</label><textarea id="pr-sejarah" style="min-height:120px;">${escA(p.sejarah||'')}</textarea></div>
+      <div class="grid2">
+        <div class="field"><label>Visi</label><textarea id="pr-visi">${escA(p.visi||'')}</textarea></div>
+        <div class="field"><label>Misi (satu per baris)</label><textarea id="pr-misi">${escA(p.misi||'')}</textarea></div>
+      </div>
+      <h2 style="margin-top:10px;">Sambutan Kepala Sekolah</h2>
+      <div class="field"><label>Isi sambutan</label><textarea id="pr-sambutan">${escA(p.sambutan||'')}</textarea></div>
+      <div class="grid2">
+        <div class="field"><label>Nama</label><input id="pr-nama" value="${escA(p.sambutan_nama||'')}"></div>
+        <div class="field"><label>Jabatan</label><input id="pr-jabatan" value="${escA(p.sambutan_jabatan||'')}"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Upload foto kepala sekolah</label><input type="file" id="pr-foto-file" accept="image/*"></div>
+        <div class="field"><label>URL foto (opsional)</label><input id="pr-foto-url" value="${escA(p.sambutan_foto||'')}"></div>
+      </div>
+      <div class="field"><label>Fasilitas (satu per baris)</label><textarea id="pr-fasilitas" style="min-height:110px;">${escA(p.fasilitas||'')}</textarea></div>
+      <button class="btn" onclick="simpanProfil()">Simpan</button>
+    </div>`;
+}
+async function simpanProfil(){
+  const foto=await resolveGambar('pr-foto-file','pr-foto-url');
+  const obj={id:1,
+    sejarah:document.getElementById('pr-sejarah').value.trim(),
+    visi:document.getElementById('pr-visi').value.trim(),
+    misi:document.getElementById('pr-misi').value.trim(),
+    sambutan:document.getElementById('pr-sambutan').value.trim(),
+    sambutan_nama:document.getElementById('pr-nama').value.trim(),
+    sambutan_jabatan:document.getElementById('pr-jabatan').value.trim(),
+    fasilitas:document.getElementById('pr-fasilitas').value.trim()
+  };
+  if(foto) obj.sambutan_foto=foto;
+  const { error }=await sb.from('profil').upsert(obj);
+  toast(error?('Gagal: '+error.message):'Tersimpan.',!error);
+}
 
 // ================= GALERI (super) =================
 async function renderGaleri(){
