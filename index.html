@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMK Negeri — Beranda</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <a class="logo" href="index.html">
+    <div class="mark" id="mark-img">S</div>
+    <div><span data-set="nama">SMK Negeri 1 Bahari</span><small data-set="tagline">Terakreditasi A · Pusat Keunggulan</small></div>
+  </a>
+  <nav class="menu" id="menu"></nav>
+  <button class="nav-toggle" onclick="toggleMenu()">☰</button>
+</div>
+
+<!-- HERO -->
+<header class="hero">
+  <div>
+    <span class="eyebrow">SMK Pusat Keunggulan · Akreditasi A</span>
+    <h1 id="hero-h1">Siap Kerja, Siap Kuliah, Siap Berwirausaha</h1>
+    <p id="hero-p">Pendidikan vokasi berbasis kompetensi industri kemaritiman dan otomotif. Dengan fasilitas modern dan kerja sama DUDI, kami mencetak lulusan yang kompeten dan siap terjun ke dunia kerja.</p>
+    <div class="cta"><a class="fill" href="#ppdb">Daftar PPDB 2026</a><a class="ghost" href="#jurusan">Lihat Jurusan</a></div>
+  </div>
+  <div class="heroimg" id="heroimg">📷 Foto Sekolah / Kegiatan</div>
+</header>
+
+<!-- STATS -->
+<div class="stats" id="stats"></div>
+
+<!-- JURUSAN -->
+<section id="jurusan">
+  <div class="head">
+    <span class="eyebrow">Program Keahlian</span>
+    <h2>Kompetensi Keahlian</h2>
+    <p>Pilih jurusan sesuai minat dan peluang karier masa depanmu</p>
+  </div>
+  <div class="wrap jur-grid" id="jur-grid"></div>
+</section>
+
+<!-- MITRA -->
+<section class="mitra" id="mitra">
+  <div class="head">
+    <span class="eyebrow">Kerja Sama Industri</span>
+    <h2>Mitra DUDI Kami</h2>
+    <p>Bekerja sama dengan perusahaan untuk PKL dan penyaluran kerja lulusan</p>
+  </div>
+  <div class="wrap logos" id="logos"></div>
+</section>
+
+<!-- BERITA -->
+<section id="berita">
+  <div class="head">
+    <span class="eyebrow">Informasi Terkini</span>
+    <h2>Berita & Pengumuman</h2>
+  </div>
+  <div class="wrap cards" id="news-cards"></div>
+</section>
+
+<!-- GALERI -->
+<section id="galeri" style="padding-top:0;">
+  <div class="head">
+    <span class="eyebrow">Dokumentasi</span>
+    <h2>Galeri Kegiatan</h2>
+  </div>
+  <div class="wrap gal-grid" id="gal-grid"></div>
+</section>
+
+<!-- PPDB -->
+<section id="ppdb">
+  <div class="wrap banner">
+    <div>
+      <h3>Penerimaan Peserta Didik Baru 2026 Telah Dibuka</h3>
+      <p>Daftar online, lengkapi berkas, dan jadilah bagian dari sekolah vokasi unggulan. Kuota terbatas untuk setiap jurusan.</p>
+    </div>
+    <div class="act"><a class="white" href="#">Daftar Sekarang</a></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer id="kontak">
+  <div class="wrap fgrid">
+    <div>
+      <h5 data-set="nama">SMK Negeri 1 Bahari</h5>
+      <p id="footer-info">Jl. Pelabuhan No. 1, Kota Bahari.<br>Telp: (0000) 123-456<br>Email: info@smkn1bahari.sch.id</p>
+    </div>
+    <div><h5>Tautan</h5><ul><li><a href="#profil">Profil Sekolah</a></li><li><a href="#jurusan">Jurusan</a></li><li><a href="#berita">Berita</a></li><li><a href="#galeri">Galeri</a></li></ul></div>
+    <div><h5>Layanan</h5><ul><li><a href="#ppdb">PPDB Online</a></li><li><a href="#">Portal BKK</a></li><li><a href="#">E-Learning</a></li><li><a href="admin/index.html">Login Admin</a></li></ul></div>
+    <div><h5>Ikuti Kami</h5><ul><li><a href="#">Instagram</a></li><li><a href="#">YouTube</a></li><li><a href="#">Facebook</a></li><li><a href="#">TikTok</a></li></ul></div>
+  </div>
+  <div class="copy">© 2026 <span data-set="nama">SMK Negeri 1 Bahari</span>. Seluruh hak cipta dilindungi.</div>
+</footer>
+
+<!-- Supabase + Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

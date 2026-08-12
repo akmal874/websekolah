@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login Admin — SMK Negeri</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+<div class="login-wrap">
+  <form class="login-card" onsubmit="doLogin(event)">
+    <div class="mark">S</div>
+    <h1>Dashboard Admin</h1>
+    <p>Masuk untuk mengelola konten website sekolah.</p>
+    <div id="msg" class="msg"></div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="email" placeholder="admin@sekolah.sch.id" required>
+    </div>
+    <div class="field">
+      <label>Kata Sandi</label>
+      <input type="password" id="password" placeholder="••••••••" required>
+    </div>
+    <button class="btn" id="loginBtn" style="width:100%;">Masuk</button>
+    <p style="text-align:center;margin-top:18px;font-size:13px;"><a href="../index.html" style="color:var(--muted);">← Kembali ke Beranda</a></p>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/config.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+// Kalau sudah login, langsung ke dashboard
+(async()=>{ const { data:{session} } = await sb.auth.getSession(); if(session) location.href='dashboard.html'; })();
+</script>
+</body>
+</html>
