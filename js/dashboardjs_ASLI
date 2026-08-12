@@ -57,7 +57,7 @@ function openModule(key){
 async function renderRingkasan(){
   const c=document.getElementById('content');
   const [berita,jur,gal,mitra]=await Promise.all([
-    db.list('berita'),db.list('jurusan'),db.list('galeri'),db.list('mitra','urutan',true)
+    db.list('berita'),db.list('jurusan'),db.list('galeri'),db.list('mitra')
   ]);
   c.innerHTML=`
     <div class="stat-cards">
