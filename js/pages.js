@@ -28,11 +28,9 @@ async function loadShared(){
       {label:'Galeri',url:'galeri.html'},{label:'Kontak',url:'index.html#kontak'}
     ];
     box.innerHTML=items.map(m=>`<a href="${escP(m.url)}">${escP(m.label)}</a>`).join('')
-      +`<a class="btn-primary" href="index.html#ppdb">Daftar PPDB</a>`;
+      +`<a class="btn-primary" href="${escP(set?.btn_ppdb_link||'index.html#ppdb')}">${escP(set?.btn_ppdb_teks||'Daftar PPDB')}</a>`;
   }
-  // footer
-  const ft=document.getElementById('footer-info');
-  if(ft) ft.innerHTML=`${escP(set?.alamat||'')}<br>Telp: ${escP(set?.telepon||'-')}<br>Email: ${escP(set?.email||'-')}`;
+  // footer sekarang dirender oleh footer.js (renderFooterPublik)
 }
 
 // ---------- HALAMAN PROFIL ----------
@@ -173,4 +171,5 @@ document.addEventListener('DOMContentLoaded',()=>{
   loadShared();
   loadProfil(); loadGaleriPage(); loadBeritaPage(); loadBeritaDetail();
   loadJurusanPage(); loadJurusanDetail(); loadHalamanCustom();
+  renderFooterPublik();
 });

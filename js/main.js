@@ -29,8 +29,10 @@ async function loadMenu(){
     {label:'Jurusan',url:'jurusan.html'},{label:'Berita',url:'berita.html'},
     {label:'Galeri',url:'galeri.html'},{label:'Kontak',url:'#kontak'}
   ];
+  const ppdbTeks = SETTINGS.btn_ppdb_teks || 'Daftar PPDB';
+  const ppdbLink = SETTINGS.btn_ppdb_link || '#ppdb';
   box.innerHTML = items.map(m=>`<a href="${esc(m.url)}">${esc(m.label)}</a>`).join('')
-    + `<a class="btn-primary" href="#ppdb">Daftar PPDB</a>`;
+    + `<a class="btn-primary" href="${esc(ppdbLink)}">${esc(ppdbTeks)}</a>`;
 }
 
 // ---------- JURUSAN ----------
@@ -93,15 +95,23 @@ async function loadGaleri(){
 }
 
 // ---------- PENGATURAN SITUS (nama sekolah, hero, dll) ----------
+let SETTINGS={}; // disimpan agar bisa dipakai loadMenu (tombol navbar)
 async function loadPengaturan(){
   const { data } = await sb.from('pengaturan').select('*').eq('id',1).single();
   if(!data) return;
+  SETTINGS=data;
   document.querySelectorAll('[data-set="nama"]').forEach(e=>e.textContent=data.nama_sekolah||e.textContent);
   document.querySelectorAll('[data-set="tagline"]').forEach(e=>e.textContent=data.tagline||e.textContent);
+  const eb=document.getElementById('hero-eyebrow'); if(eb&&data.hero_eyebrow) eb.textContent=data.hero_eyebrow;
   const hh=document.getElementById('hero-h1'); if(hh&&data.hero_judul) hh.textContent=data.hero_judul;
   const hp=document.getElementById('hero-p'); if(hp&&data.hero_teks) hp.textContent=data.hero_teks;
   const hi=document.getElementById('heroimg'); if(hi&&data.hero_gambar) hi.innerHTML=`<img src="${esc(data.hero_gambar)}" alt="">`;
   const ma=document.getElementById('mark-img'); if(ma&&data.logo_url) ma.innerHTML=`<img src="${esc(data.logo_url)}" alt="">`;
+  // tombol hero
+  const bp=document.getElementById('hero-btn-ppdb');
+  if(bp){ if(data.btn_ppdb_teks) bp.textContent=data.btn_ppdb_teks; if(data.btn_ppdb_link) bp.href=data.btn_ppdb_link; }
+  const bj=document.getElementById('hero-btn-jurusan');
+  if(bj){ if(data.btn_jurusan_teks) bj.textContent=data.btn_jurusan_teks; if(data.btn_jurusan_link) bj.href=data.btn_jurusan_link; }
   const ft=document.getElementById('footer-info');
   if(ft) ft.innerHTML=`${esc(data.alamat||'')}<br>Telp: ${esc(data.telepon||'-')}<br>Email: ${esc(data.email||'-')}`;
 }
@@ -133,8 +143,26 @@ async function loadBerandaSection(){
   if(footer) anchor.appendChild(footer);
 }
 
+// ---------- HALAMAN CUSTOM DI BERANDA ----------
+async function loadHalamanBeranda(){
+  const { data } = await sb.from('halaman').select('*').eq('published',true).eq('di_beranda',true).order('beranda_urutan');
+  if(!data||!data.length) return;
+  const footer=document.querySelector('footer');
+  const parent=footer?.parentNode||document.body;
+  data.forEach(h=>{
+    const sec=document.createElement('section');
+    sec.className='wrap-custom';
+    sec.innerHTML=`<div class="head"><h2>${esc(h.judul)}</h2></div><div class="prose" style="max-width:1000px;margin:0 auto;">${h.konten||''}</div>`;
+    parent.insertBefore(sec,footer); // sisipkan sebelum footer
+  });
+}
+
 // ---------- INIT ----------
-document.addEventListener('DOMContentLoaded',()=>{
-  loadPengaturan(); loadMenu(); loadStats(); loadJurusan();
-  loadMitra(); loadBerita(); loadGaleri(); loadBerandaSection();
+document.addEventListener('DOMContentLoaded',async()=>{
+  await loadPengaturan();            // isi SETTINGS dulu (untuk tombol navbar)
+  loadMenu(); loadStats(); loadJurusan();
+  loadMitra(); loadBerita(); loadGaleri();
+  await loadBerandaSection();
+  await loadHalamanBeranda();        // halaman custom yang dipilih tampil di beranda
+  renderFooterPublik();
 });

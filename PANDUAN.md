@@ -15,6 +15,8 @@ Aplikasi ini pakai **HTML + CSS + JavaScript murni** (tanpa Next.js) dan **Supab
    Ini menambah tabel Profil dan kolom detail jurusan untuk halaman-halaman terpisah.
 6. Buka file `supabase-tambahan2.sql`, salin isinya, tempel di query baru, klik **Run**.
    Ini menambah tabel Halaman custom dan Pengaturan section beranda.
+7. Buka file `supabase-tambahan3.sql`, salin isinya, tempel di query baru, klik **Run**.
+   Ini menambah pengaturan tombol hero/navbar, footer, dan sosial media.
 
 ## B. Ambil kunci koneksi
 

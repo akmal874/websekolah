@@ -22,10 +22,10 @@
 <!-- HERO -->
 <header class="hero" data-section="hero">
   <div>
-    <span class="eyebrow">SMK Pusat Keunggulan · Akreditasi A</span>
+    <span class="eyebrow" id="hero-eyebrow">SMK Pusat Keunggulan · Akreditasi A</span>
     <h1 id="hero-h1">Siap Kerja, Siap Kuliah, Siap Berwirausaha</h1>
     <p id="hero-p">Pendidikan vokasi berbasis kompetensi industri kemaritiman dan otomotif. Dengan fasilitas modern dan kerja sama DUDI, kami mencetak lulusan yang kompeten dan siap terjun ke dunia kerja.</p>
-    <div class="cta"><a class="fill" href="#ppdb">Daftar PPDB 2026</a><a class="ghost" href="#jurusan">Lihat Jurusan</a></div>
+    <div class="cta"><a class="fill" id="hero-btn-ppdb" href="#ppdb">Daftar PPDB 2026</a><a class="ghost" id="hero-btn-jurusan" href="jurusan.html">Lihat Jurusan</a></div>
   </div>
   <div class="heroimg" id="heroimg">📷 Foto Sekolah / Kegiatan</div>
 </header>
@@ -85,21 +85,14 @@
 
 <!-- FOOTER -->
 <footer id="kontak">
-  <div class="wrap fgrid">
-    <div>
-      <h5 data-set="nama">SMK Negeri 1 Bahari</h5>
-      <p id="footer-info">Jl. Pelabuhan No. 1, Kota Bahari.<br>Telp: (0000) 123-456<br>Email: info@smkn1bahari.sch.id</p>
-    </div>
-    <div><h5>Tautan</h5><ul><li><a href="#profil">Profil Sekolah</a></li><li><a href="#jurusan">Jurusan</a></li><li><a href="#berita">Berita</a></li><li><a href="#galeri">Galeri</a></li></ul></div>
-    <div><h5>Layanan</h5><ul><li><a href="#ppdb">PPDB Online</a></li><li><a href="#">Portal BKK</a></li><li><a href="#">E-Learning</a></li><li><a href="admin/index.html">Login Admin</a></li></ul></div>
-    <div><h5>Ikuti Kami</h5><ul><li><a href="#">Instagram</a></li><li><a href="#">YouTube</a></li><li><a href="#">Facebook</a></li><li><a href="#">TikTok</a></li></ul></div>
-  </div>
-  <div class="copy">© 2026 <span data-set="nama">SMK Negeri 1 Bahari</span>. Seluruh hak cipta dilindungi.</div>
+  <div class="wrap fgrid" id="footer-grid"></div>
+  <div class="copy" id="footer-copyright">© 2026 SMK Negeri 1 Bahari. Seluruh hak cipta dilindungi.</div>
 </footer>
 
 <!-- Supabase + Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
+<script src="js/footer.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

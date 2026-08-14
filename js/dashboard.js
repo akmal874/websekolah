@@ -15,6 +15,7 @@ const MODULES={
   menu:     { label:'Menu Navigasi', icon:'🧭', superOnly:true },
   halaman:  { label:'Halaman', icon:'📄', superOnly:true },
   beranda:  { label:'Pengaturan Beranda', icon:'🏠', superOnly:true },
+  footer:   { label:'Footer', icon:'📍', superOnly:true },
   ppdb:     { label:'PPDB', icon:'📝', superOnly:true },
   pengaturan:{ label:'Pengaturan Situs', icon:'⚙️', superOnly:true },
   pengguna: { label:'Kelola Pengguna', icon:'👥', superOnly:true }
@@ -53,7 +54,7 @@ function openModule(key){
     ringkasan:renderRingkasan, berita:renderBerita, jurusan:renderJurusan,
     profil:renderProfil,
     galeri:renderGaleri, mitra:renderMitra, statistik:renderStatistik,
-    menu:renderMenu, halaman:renderHalaman, beranda:renderBeranda,
+    menu:renderMenu, halaman:renderHalaman, beranda:renderBeranda, footer:renderFooter,
     ppdb:renderPPDB, pengaturan:renderPengaturan, pengguna:renderPengguna
   })[key]();
 }
@@ -384,14 +385,18 @@ async function renderMenu(){
       </div>
     </div>
     <div class="panel"><h2>Daftar Menu</h2>
-      <table><thead><tr><th>Urutan</th><th>Label</th><th>URL</th><th>Status</th><th></th></tr></thead>
+      <table><thead><tr><th>Urutan</th><th>Label</th><th>URL</th><th>Status</th><th>Aksi</th></tr></thead>
       <tbody>${rows.map(n=>`<tr><td>${n.urutan??''}</td><td>${escA(n.label)}</td><td>${escA(n.url)}</td>
       <td><span class="badge ${n.active?'on':'off'}">${n.active?'Tampil':'Nonaktif'}</span></td>
       <td class="row">
+        <button class="btn btn-sm ${n.active?'btn-ghost':''}" onclick="toggleMenuAktif('${n.id}',${n.active})">${n.active?'Nonaktifkan':'Aktifkan'}</button>
         <button class="btn btn-sm btn-ghost" onclick='editMenu(${JSON.stringify(n)})'>Edit</button>
         <button class="btn btn-sm btn-danger" onclick="hapusMenu('${n.id}')">Hapus</button>
       </td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;color:#94a3b8;">Belum ada menu.</td></tr>'}</tbody></table>
     </div>`;
+}
+async function toggleMenuAktif(id,current){
+  if(await db.update('nav_menu',id,{active:!current})) renderMenu();
 }
 function resetMenu(){
   ['n-id','n-label','n-url'].forEach(i=>document.getElementById(i).value='');
@@ -540,7 +545,36 @@ async function renderBeranda(){
         <td><input type="checkbox" id="bs-aktif-${s.key}" ${s.aktif?'checked':''}></td>
       </tr>`).join('')}</tbody></table>
       <div style="margin-top:18px;"><button class="btn" onclick='simpanBeranda(${JSON.stringify(rows.map(r=>r.key))})'>Simpan Semua</button></div>
+    </div>
+    <div class="panel">
+      <h2>Halaman Custom di Beranda</h2>
+      <p class="desc">Pilih halaman buatan sendiri yang ingin ikut tampil sebagai bagian di beranda. Untuk menambah/mengedit/menghapus isi halaman, gunakan menu <b>Halaman</b>.</p>
+      <div id="beranda-halaman"><div class="loading">Memuat…</div></div>
     </div>`;
+  loadHalamanBeranda();
+}
+async function loadHalamanBeranda(){
+  const box=document.getElementById('beranda-halaman'); if(!box) return;
+  const rows=await db.list('halaman','judul',true);
+  if(!rows.length){ box.innerHTML='<p style="color:#94a3b8;">Belum ada halaman custom. Buat dulu di menu Halaman.</p>'; return; }
+  box.innerHTML=`
+    <table><thead><tr><th>Judul</th><th>Tampil di beranda</th><th>Urutan</th><th>Aksi</th></tr></thead>
+    <tbody>${rows.map(h=>`<tr>
+      <td>${escA(h.judul)}</td>
+      <td><input type="checkbox" id="hb-aktif-${h.id}" ${h.di_beranda?'checked':''}></td>
+      <td><input type="number" id="hb-urutan-${h.id}" value="${h.beranda_urutan??99}" style="width:70px;padding:8px;border:1.5px solid var(--line);border-radius:7px;"></td>
+      <td class="row">
+        <button class="btn btn-sm" onclick="simpanHalamanBeranda('${h.id}')">Simpan</button>
+        <button class="btn btn-sm btn-ghost" onclick="openModule('halaman')">Edit isi</button>
+      </td>
+    </tr>`).join('')}</tbody></table>`;
+}
+async function simpanHalamanBeranda(id){
+  const obj={
+    di_beranda:document.getElementById('hb-aktif-'+id).checked,
+    beranda_urutan:parseInt(document.getElementById('hb-urutan-'+id).value)||99
+  };
+  if(await db.update('halaman',id,obj)) { toast('Tersimpan.'); loadHalamanBeranda(); }
 }
 async function simpanBeranda(keys){
   const punyaJudul=['jurusan','mitra','berita','galeri'];
@@ -555,6 +589,83 @@ async function simpanBeranda(keys){
   toast('Pengaturan beranda tersimpan.');
   renderBeranda();
 }
+
+// ================= FOOTER (super) =================
+async function renderFooter(){
+  const c=document.getElementById('content');
+  const { data:p }=await sb.from('pengaturan').select('*').eq('id',1).single();
+  const s=p||{};
+  const links=await db.list('footer_link','urutan',true);
+  const sosmed=await db.list('sosial_media','urutan',true);
+  c.innerHTML=`
+    <div id="toast" class="msg"></div>
+    <div class="panel">
+      <h2>Informasi Footer</h2>
+      <div class="field"><label>Deskripsi singkat sekolah (kolom pertama footer)</label><textarea id="f-deskripsi">${escA(s.footer_deskripsi||'')}</textarea></div>
+      <div class="field"><label>Alamat</label><input id="f-alamat" value="${escA(s.alamat||'')}"></div>
+      <div class="grid2">
+        <div class="field"><label>Telepon</label><input id="f-telp" value="${escA(s.telepon||'')}"></div>
+        <div class="field"><label>Email</label><input id="f-email" value="${escA(s.email||'')}"></div>
+      </div>
+      <div class="field"><label>Teks Copyright</label><input id="f-copyright" value="${escA(s.copyright||'')}" placeholder="© 2026 Nama Sekolah. Seluruh hak cipta dilindungi."></div>
+      <button class="btn" onclick="simpanFooterInfo()">Simpan Info Footer</button>
+    </div>
+
+    <div class="panel">
+      <h2>Kolom Tautan Footer</h2>
+      <p class="desc">Kelompokkan link berdasarkan nama kolom (mis. "Tautan", "Layanan").</p>
+      <div class="grid2">
+        <div class="field"><label>Nama kolom</label><input id="fl-kolom" placeholder="Tautan"></div>
+        <div class="field"><label>Label link</label><input id="fl-label" placeholder="Profil"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>URL</label><input id="fl-url" placeholder="profil.html"></div>
+        <div class="field"><label>Urutan</label><input type="number" id="fl-urutan" value="1"></div>
+      </div>
+      <button class="btn" onclick="tambahFLink()">Tambah Link</button>
+      <table style="margin-top:16px;"><thead><tr><th>Kolom</th><th>Label</th><th>URL</th><th>Aksi</th></tr></thead>
+      <tbody>${links.map(l=>`<tr><td>${escA(l.kolom)}</td><td>${escA(l.label)}</td><td>${escA(l.url)}</td>
+        <td><button class="btn btn-sm btn-danger" onclick="hapusFLink('${l.id}')">Hapus</button></td></tr>`).join('')||'<tr><td colspan="4" style="text-align:center;color:#94a3b8;">Belum ada.</td></tr>'}</tbody></table>
+    </div>
+
+    <div class="panel">
+      <h2>Sosial Media</h2>
+      <div class="grid2">
+        <div class="field"><label>Nama</label><input id="sm-nama" placeholder="Instagram"></div>
+        <div class="field"><label>URL</label><input id="sm-url" placeholder="https://instagram.com/..."></div>
+      </div>
+      <button class="btn" onclick="tambahSosmed()">Tambah Sosial Media</button>
+      <table style="margin-top:16px;"><thead><tr><th>Nama</th><th>URL</th><th>Aksi</th></tr></thead>
+      <tbody>${sosmed.map(m=>`<tr><td>${escA(m.nama)}</td><td>${escA(m.url)}</td>
+        <td><button class="btn btn-sm btn-danger" onclick="hapusSosmed('${m.id}')">Hapus</button></td></tr>`).join('')||'<tr><td colspan="3" style="text-align:center;color:#94a3b8;">Belum ada.</td></tr>'}</tbody></table>
+    </div>`;
+}
+async function simpanFooterInfo(){
+  const obj={id:1,
+    footer_deskripsi:document.getElementById('f-deskripsi').value.trim(),
+    alamat:document.getElementById('f-alamat').value.trim(),
+    telepon:document.getElementById('f-telp').value.trim(),
+    email:document.getElementById('f-email').value.trim(),
+    copyright:document.getElementById('f-copyright').value.trim()
+  };
+  const { error }=await sb.from('pengaturan').upsert(obj);
+  toast(error?('Gagal: '+error.message):'Tersimpan.',!error);
+}
+async function tambahFLink(){
+  const kolom=document.getElementById('fl-kolom').value.trim()||'Tautan';
+  const label=document.getElementById('fl-label').value.trim();
+  const url=document.getElementById('fl-url').value.trim();
+  if(!label||!url){toast('Label & URL wajib diisi.',false);return;}
+  if(await db.insert('footer_link',{kolom,label,url,urutan:parseInt(document.getElementById('fl-urutan').value)||1,active:true})) renderFooter();
+}
+async function hapusFLink(id){if(await db.remove('footer_link',id))renderFooter();}
+async function tambahSosmed(){
+  const nama=document.getElementById('sm-nama').value.trim();
+  const url=document.getElementById('sm-url').value.trim();
+  if(!nama||!url){toast('Nama & URL wajib diisi.',false);return;}
+  if(await db.insert('sosial_media',{nama,url,urutan:1,active:true})) renderFooter();
+}
+async function hapusSosmed(id){if(await db.remove('sosial_media',id))renderFooter();}
 
 // ================= PPDB (super) =================
 async function renderPPDB(){
@@ -592,6 +703,7 @@ async function renderPengaturan(){
         <div class="field"><label>Nama sekolah</label><input id="set-nama" value="${escA(p.nama_sekolah||'')}"></div>
         <div class="field"><label>Tagline</label><input id="set-tagline" value="${escA(p.tagline||'')}"></div>
       </div>
+      <div class="field"><label>Eyebrow (teks kecil di atas judul hero)</label><input id="set-eyebrow" value="${escA(p.hero_eyebrow||'')}" placeholder="SMK Pusat Keunggulan · Akreditasi A"></div>
       <div class="field"><label>Judul Hero</label><input id="set-hjudul" value="${escA(p.hero_judul||'')}"></div>
       <div class="field"><label>Teks Hero</label><textarea id="set-hteks">${escA(p.hero_teks||'')}</textarea></div>
       <div class="grid2">
@@ -602,6 +714,18 @@ async function renderPengaturan(){
         <div class="field"><label>Upload gambar hero</label><input type="file" id="set-hero-file" accept="image/*"></div>
         <div class="field"><label>URL gambar hero</label><input id="set-hero-url" value="${escA(p.hero_gambar||'')}"></div>
       </div>
+
+      <h2 style="margin-top:10px;">Tombol Utama</h2>
+      <p class="desc">Tombol PPDB dipakai di hero <b>dan</b> di navbar sekaligus. Tombol Jurusan hanya di hero.</p>
+      <div class="grid2">
+        <div class="field"><label>Teks tombol PPDB</label><input id="set-btn-ppdb-teks" value="${escA(p.btn_ppdb_teks||'')}" placeholder="Daftar PPDB 2026"></div>
+        <div class="field"><label>Link tombol PPDB</label><input id="set-btn-ppdb-link" value="${escA(p.btn_ppdb_link||'')}" placeholder="#ppdb atau https://form..."></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Teks tombol Jurusan</label><input id="set-btn-jur-teks" value="${escA(p.btn_jurusan_teks||'')}" placeholder="Lihat Jurusan"></div>
+        <div class="field"><label>Link tombol Jurusan</label><input id="set-btn-jur-link" value="${escA(p.btn_jurusan_link||'')}" placeholder="jurusan.html"></div>
+      </div>
+
       <h2 style="margin-top:10px;">Kontak</h2>
       <div class="field"><label>Alamat</label><input id="set-alamat" value="${escA(p.alamat||'')}"></div>
       <div class="grid2">
@@ -617,8 +741,13 @@ async function simpanPengaturan(){
   const obj={id:1,
     nama_sekolah:document.getElementById('set-nama').value.trim(),
     tagline:document.getElementById('set-tagline').value.trim(),
+    hero_eyebrow:document.getElementById('set-eyebrow').value.trim(),
     hero_judul:document.getElementById('set-hjudul').value.trim(),
     hero_teks:document.getElementById('set-hteks').value.trim(),
+    btn_ppdb_teks:document.getElementById('set-btn-ppdb-teks').value.trim(),
+    btn_ppdb_link:document.getElementById('set-btn-ppdb-link').value.trim(),
+    btn_jurusan_teks:document.getElementById('set-btn-jur-teks').value.trim(),
+    btn_jurusan_link:document.getElementById('set-btn-jur-link').value.trim(),
     alamat:document.getElementById('set-alamat').value.trim(),
     telepon:document.getElementById('set-telp').value.trim(),
     email:document.getElementById('set-email').value.trim()
