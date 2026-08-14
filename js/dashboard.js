@@ -13,6 +13,8 @@ const MODULES={
   mitra:    { label:'Mitra DUDI',icon:'🤝', superOnly:true  },
   statistik:{ label:'Statistik', icon:'🔢', superOnly:true  },
   menu:     { label:'Menu Navigasi', icon:'🧭', superOnly:true },
+  halaman:  { label:'Halaman', icon:'📄', superOnly:true },
+  beranda:  { label:'Pengaturan Beranda', icon:'🏠', superOnly:true },
   ppdb:     { label:'PPDB', icon:'📝', superOnly:true },
   pengaturan:{ label:'Pengaturan Situs', icon:'⚙️', superOnly:true },
   pengguna: { label:'Kelola Pengguna', icon:'👥', superOnly:true }
@@ -51,7 +53,8 @@ function openModule(key){
     ringkasan:renderRingkasan, berita:renderBerita, jurusan:renderJurusan,
     profil:renderProfil,
     galeri:renderGaleri, mitra:renderMitra, statistik:renderStatistik,
-    menu:renderMenu, ppdb:renderPPDB, pengaturan:renderPengaturan, pengguna:renderPengguna
+    menu:renderMenu, halaman:renderHalaman, beranda:renderBeranda,
+    ppdb:renderPPDB, pengaturan:renderPengaturan, pengguna:renderPengguna
   })[key]();
 }
 
@@ -347,32 +350,211 @@ async function hapusStat(id){if(await db.remove('statistik',id))renderStatistik(
 async function renderMenu(){
   const c=document.getElementById('content');
   const rows=await db.list('nav_menu','urutan',true);
+  // ambil daftar halaman custom untuk pilihan URL
+  const { data:pages } = await sb.from('halaman').select('slug,judul').eq('published',true).order('judul');
+  const pageOpts=(pages||[]).map(p=>`<option value="page.html?slug=${escA(p.slug)}">${escA(p.judul)} (custom)</option>`).join('');
   c.innerHTML=`
     <div id="toast" class="msg"></div>
-    <div class="panel"><h2>Tambah Menu</h2>
+    <div class="panel"><h2 id="n-form-title">Tambah Menu</h2>
+      <input type="hidden" id="n-id">
       <div class="grid2">
         <div class="field"><label>Label</label><input id="n-label" placeholder="Profil"></div>
-        <div class="field"><label>URL / anchor</label><input id="n-url" placeholder="#profil atau profil.html"></div>
+        <div class="field"><label>URL / anchor</label><input id="n-url" placeholder="profil.html atau #kontak"></div>
+      </div>
+      <div class="field"><label>Pilih cepat halaman (opsional)</label>
+        <select id="n-pick" onchange="if(this.value){document.getElementById('n-url').value=this.value;}">
+          <option value="">— pilih halaman —</option>
+          <option value="index.html">Beranda</option>
+          <option value="profil.html">Profil</option>
+          <option value="jurusan.html">Jurusan</option>
+          <option value="berita.html">Berita</option>
+          <option value="galeri.html">Galeri</option>
+          <option value="index.html#kontak">Kontak (footer beranda)</option>
+          ${pageOpts}
+        </select>
+        <div class="hint">Memilih di sini otomatis mengisi kolom URL di atas.</div>
       </div>
       <div class="grid2">
         <div class="field"><label>Urutan</label><input type="number" id="n-urutan" value="1"></div>
         <div class="field"><label><input type="checkbox" id="n-active" checked> Tampilkan</label></div>
       </div>
-      <button class="btn" onclick="simpanMenu()">Simpan</button>
+      <div class="row">
+        <button class="btn" onclick="simpanMenu()">Simpan</button>
+        <button class="btn btn-ghost" onclick="resetMenu()">Batal</button>
+      </div>
     </div>
     <div class="panel"><h2>Daftar Menu</h2>
       <table><thead><tr><th>Urutan</th><th>Label</th><th>URL</th><th>Status</th><th></th></tr></thead>
       <tbody>${rows.map(n=>`<tr><td>${n.urutan??''}</td><td>${escA(n.label)}</td><td>${escA(n.url)}</td>
       <td><span class="badge ${n.active?'on':'off'}">${n.active?'Tampil':'Nonaktif'}</span></td>
-      <td><button class="btn btn-sm btn-danger" onclick="hapusMenu('${n.id}')">Hapus</button></td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;color:#94a3b8;">Belum ada menu.</td></tr>'}</tbody></table>
+      <td class="row">
+        <button class="btn btn-sm btn-ghost" onclick='editMenu(${JSON.stringify(n)})'>Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="hapusMenu('${n.id}')">Hapus</button>
+      </td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;color:#94a3b8;">Belum ada menu.</td></tr>'}</tbody></table>
     </div>`;
 }
+function resetMenu(){
+  ['n-id','n-label','n-url'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('n-urutan').value='1'; document.getElementById('n-active').checked=true;
+  document.getElementById('n-pick').value=''; document.getElementById('n-form-title').textContent='Tambah Menu';
+}
+function editMenu(n){
+  document.getElementById('n-id').value=n.id;
+  document.getElementById('n-label').value=n.label||'';
+  document.getElementById('n-url').value=n.url||'';
+  document.getElementById('n-urutan').value=n.urutan||1;
+  document.getElementById('n-active').checked=!!n.active;
+  document.getElementById('n-form-title').textContent='Edit Menu';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 async function simpanMenu(){
+  const id=document.getElementById('n-id').value;
   const label=document.getElementById('n-label').value.trim(),url=document.getElementById('n-url').value.trim();
   if(!label||!url){toast('Label & URL wajib diisi.',false);return;}
-  if(await db.insert('nav_menu',{label,url,urutan:parseInt(document.getElementById('n-urutan').value)||1,active:document.getElementById('n-active').checked})) renderMenu();
+  const obj={label,url,urutan:parseInt(document.getElementById('n-urutan').value)||1,active:document.getElementById('n-active').checked};
+  const ok=id?await db.update('nav_menu',id,obj):await db.insert('nav_menu',obj);
+  if(ok){resetMenu();renderMenu();}
 }
 async function hapusMenu(id){if(await db.remove('nav_menu',id))renderMenu();}
+
+// ================= HALAMAN CUSTOM (super) =================
+async function renderHalaman(){
+  const c=document.getElementById('content');
+  const rows=await db.list('halaman','created_at',false);
+  c.innerHTML=`
+    <div id="toast" class="msg"></div>
+    <div class="panel">
+      <h2 id="h-form-title">Tambah Halaman</h2>
+      <p class="desc">Buat halaman sendiri (mis. Fasilitas, Ekstrakurikuler). Halaman tampil di <code>page.html?slug=...</code> dan bisa ditambahkan ke menu navigasi.</p>
+      <input type="hidden" id="h-id">
+      <div class="grid2">
+        <div class="field"><label>Judul halaman</label><input id="h-judul" placeholder="Fasilitas Sekolah" oninput="autoSlug()"></div>
+        <div class="field"><label>Slug (alamat URL)</label><input id="h-slug" placeholder="fasilitas"><div class="hint">Hanya huruf kecil & tanda hubung. Contoh: page.html?slug=<b id="slug-preview">fasilitas</b></div></div>
+      </div>
+      <div class="field">
+        <label>Mode penulisan konten</label>
+        <div class="split">
+          <label><input type="radio" name="h-mode" value="visual" checked onchange="switchMode('visual')"> Visual (teks biasa)</label>
+          <span class="or">atau</span>
+          <label><input type="radio" name="h-mode" value="html" onchange="switchMode('html')"> HTML (tempel kode/embed)</label>
+        </div>
+      </div>
+      <div class="field" id="wrap-visual">
+        <label>Konten</label>
+        <div id="h-toolbar" style="margin-bottom:8px;display:flex;gap:6px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-sm btn-ghost" onclick="fmt('bold')"><b>B</b></button>
+          <button type="button" class="btn btn-sm btn-ghost" onclick="fmt('italic')"><i>I</i></button>
+          <button type="button" class="btn btn-sm btn-ghost" onclick="fmt('formatBlock','h2')">Judul</button>
+          <button type="button" class="btn btn-sm btn-ghost" onclick="fmt('insertUnorderedList')">• List</button>
+          <button type="button" class="btn btn-sm btn-ghost" onclick="fmtLink()">🔗 Link</button>
+        </div>
+        <div id="h-visual" contenteditable="true" style="min-height:200px;border:1.5px solid var(--line);border-radius:9px;padding:14px;font-size:14px;line-height:1.7;"></div>
+      </div>
+      <div class="field hidden" id="wrap-html">
+        <label>Kode HTML / Embed</label>
+        <textarea id="h-html" style="min-height:220px;font-family:monospace;font-size:13px;" placeholder="&lt;iframe src=...&gt;&lt;/iframe&gt; atau kode HTML lain"></textarea>
+        <div class="hint">Bisa tempel embed Google Maps, YouTube, atau HTML apa pun.</div>
+      </div>
+      <div class="field"><label><input type="checkbox" id="h-pub" checked> Terbitkan (published)</label></div>
+      <div class="row"><button class="btn" onclick="simpanHalaman()">Simpan</button><button class="btn btn-ghost" onclick="resetHalaman()">Batal</button></div>
+    </div>
+    <div class="panel"><h2>Daftar Halaman</h2>
+      <table><thead><tr><th>Judul</th><th>Slug</th><th>Mode</th><th>Status</th><th></th></tr></thead>
+      <tbody>${rows.map(h=>`<tr>
+        <td>${escA(h.judul)}</td>
+        <td><a href="../page.html?slug=${escA(h.slug)}" target="_blank">${escA(h.slug)}</a></td>
+        <td>${h.mode==='html'?'HTML':'Visual'}</td>
+        <td><span class="badge ${h.published?'on':'off'}">${h.published?'Terbit':'Draft'}</span></td>
+        <td class="row">
+          <button class="btn btn-sm btn-ghost" onclick='editHalaman(${JSON.stringify(h)})'>Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="hapusHalaman('${h.id}')">Hapus</button>
+        </td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;color:#94a3b8;">Belum ada halaman.</td></tr>'}</tbody></table>
+    </div>`;
+}
+function autoSlug(){
+  const j=document.getElementById('h-judul').value;
+  const s=document.getElementById('h-slug');
+  if(!s.dataset.touched){
+    s.value=j.toLowerCase().trim().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-');
+    document.getElementById('slug-preview').textContent=s.value||'slug';
+  }
+}
+function switchMode(m){
+  document.getElementById('wrap-visual').classList.toggle('hidden',m!=='visual');
+  document.getElementById('wrap-html').classList.toggle('hidden',m!=='html');
+}
+function fmt(cmd,val){ document.execCommand(cmd,false,val||null); document.getElementById('h-visual').focus(); }
+function fmtLink(){ const url=prompt('Masukkan URL:'); if(url) document.execCommand('createLink',false,url); }
+function resetHalaman(){
+  document.getElementById('h-id').value='';
+  document.getElementById('h-judul').value='';
+  const s=document.getElementById('h-slug'); s.value=''; delete s.dataset.touched;
+  document.getElementById('h-visual').innerHTML='';
+  document.getElementById('h-html').value='';
+  document.getElementById('h-pub').checked=true;
+  document.querySelector('input[name="h-mode"][value="visual"]').checked=true; switchMode('visual');
+  document.getElementById('h-form-title').textContent='Tambah Halaman';
+}
+function editHalaman(h){
+  document.getElementById('h-id').value=h.id;
+  document.getElementById('h-judul').value=h.judul||'';
+  const s=document.getElementById('h-slug'); s.value=h.slug||''; s.dataset.touched='1';
+  document.getElementById('h-pub').checked=!!h.published;
+  const mode=h.mode||'visual';
+  document.querySelector(`input[name="h-mode"][value="${mode}"]`).checked=true; switchMode(mode);
+  if(mode==='html'){ document.getElementById('h-html').value=h.konten||''; }
+  else { document.getElementById('h-visual').innerHTML=h.konten||''; }
+  document.getElementById('h-form-title').textContent='Edit Halaman';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+async function simpanHalaman(){
+  const id=document.getElementById('h-id').value;
+  const judul=document.getElementById('h-judul').value.trim();
+  let slug=document.getElementById('h-slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'');
+  if(!judul||!slug){toast('Judul & slug wajib diisi.',false);return;}
+  const mode=document.querySelector('input[name="h-mode"]:checked').value;
+  const konten = mode==='html' ? document.getElementById('h-html').value : document.getElementById('h-visual').innerHTML;
+  const obj={judul,slug,mode,konten,published:document.getElementById('h-pub').checked};
+  const ok=id?await db.update('halaman',id,obj):await db.insert('halaman',obj);
+  if(ok){resetHalaman();renderHalaman();}
+}
+async function hapusHalaman(id){if(await db.remove('halaman',id))renderHalaman();}
+
+// ================= PENGATURAN BERANDA (super) =================
+async function renderBeranda(){
+  const c=document.getElementById('content');
+  const { data } = await sb.from('beranda_section').select('*').order('urutan');
+  const rows=data||[];
+  const namaSection={hero:'Hero (banner atas)',stats:'Statistik',jurusan:'Jurusan',mitra:'Mitra DUDI',berita:'Berita',galeri:'Galeri',ppdb:'PPDB'};
+  const punyaJudul=['jurusan','mitra','berita','galeri'];
+  c.innerHTML=`
+    <div id="toast" class="msg"></div>
+    <div class="panel">
+      <h2>Pengaturan Bagian Beranda</h2>
+      <p class="desc">Atur bagian mana yang tampil di beranda, urutannya, dan judulnya. Klik Simpan setelah mengubah.</p>
+      <table><thead><tr><th>Bagian</th><th>Judul (jika ada)</th><th>Urutan</th><th>Tampil</th></tr></thead>
+      <tbody>${rows.map(s=>`<tr>
+        <td><b>${namaSection[s.key]||s.key}</b></td>
+        <td>${punyaJudul.includes(s.key)?`<input id="bs-judul-${s.key}" value="${escA(s.judul||'')}" style="width:100%;padding:8px;border:1.5px solid var(--line);border-radius:7px;">`:'<span style="color:#94a3b8;">—</span>'}</td>
+        <td><input type="number" id="bs-urutan-${s.key}" value="${s.urutan??1}" style="width:70px;padding:8px;border:1.5px solid var(--line);border-radius:7px;"></td>
+        <td><input type="checkbox" id="bs-aktif-${s.key}" ${s.aktif?'checked':''}></td>
+      </tr>`).join('')}</tbody></table>
+      <div style="margin-top:18px;"><button class="btn" onclick='simpanBeranda(${JSON.stringify(rows.map(r=>r.key))})'>Simpan Semua</button></div>
+    </div>`;
+}
+async function simpanBeranda(keys){
+  const punyaJudul=['jurusan','mitra','berita','galeri'];
+  for(const key of keys){
+    const obj={
+      aktif:document.getElementById('bs-aktif-'+key).checked,
+      urutan:parseInt(document.getElementById('bs-urutan-'+key).value)||1
+    };
+    if(punyaJudul.includes(key)){ obj.judul=document.getElementById('bs-judul-'+key).value.trim(); }
+    await sb.from('beranda_section').update(obj).eq('key',key);
+  }
+  toast('Pengaturan beranda tersimpan.');
+  renderBeranda();
+}
 
 // ================= PPDB (super) =================
 async function renderPPDB(){

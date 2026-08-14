@@ -106,8 +106,35 @@ async function loadPengaturan(){
   if(ft) ft.innerHTML=`${esc(data.alamat||'')}<br>Telp: ${esc(data.telepon||'-')}<br>Email: ${esc(data.email||'-')}`;
 }
 
+// ---------- PENGATURAN SECTION BERANDA ----------
+async function loadBerandaSection(){
+  const { data } = await sb.from('beranda_section').select('*').order('urutan',{ascending:true});
+  if(!data||!data.length) return;
+  data.forEach(s=>{
+    const el=document.querySelector(`[data-section="${s.key}"]`);
+    if(!el) return;
+    el.style.display = s.aktif ? '' : 'none';           // tampil/sembunyi
+    if(s.judul){                                         // judul section
+      const t=document.querySelector(`[data-sectitle="${s.key}"]`);
+      if(t) t.textContent=s.judul;
+    }
+  });
+  // Susun ulang urutan section langsung di DOM (sesuai kolom urutan)
+  const first=document.querySelector('[data-section]');
+  if(!first) return;
+  const anchor=first.parentNode;              // induk semua section (body)
+  const marker=first.previousElementSibling;  // patokan sisip (nav)
+  data.forEach(s=>{
+    const el=document.querySelector(`[data-section="${s.key}"]`);
+    if(el) anchor.appendChild(el);            // pindahkan ke urutan sesuai data
+  });
+  // pastikan footer tetap paling bawah
+  const footer=document.querySelector('footer');
+  if(footer) anchor.appendChild(footer);
+}
+
 // ---------- INIT ----------
 document.addEventListener('DOMContentLoaded',()=>{
   loadPengaturan(); loadMenu(); loadStats(); loadJurusan();
-  loadMitra(); loadBerita(); loadGaleri();
+  loadMitra(); loadBerita(); loadGaleri(); loadBerandaSection();
 });

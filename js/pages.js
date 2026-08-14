@@ -150,9 +150,27 @@ async function loadJurusanDetail(){
     ${j.prospek?`<div class="sec"><h3>Prospek Karier</h3><p>${escP(j.prospek)}</p></div>`:''}`;
 }
 
+// ---------- HALAMAN CUSTOM (page.html?slug=xxx) ----------
+async function loadHalamanCustom(){
+  const box=document.getElementById('page-konten'); if(!box) return;
+  const slug=qs('slug');
+  if(!slug){ box.innerHTML='<div class="empty">Halaman tidak ditemukan.</div>'; return; }
+  const { data:h } = await sb.from('halaman').select('*').eq('slug',slug).eq('published',true).single();
+  if(!h){
+    document.getElementById('page-judul').textContent='Halaman tidak ditemukan';
+    box.innerHTML='<div class="empty">Halaman yang Anda cari tidak ada atau belum diterbitkan.</div>';
+    return;
+  }
+  document.title=h.judul+' — SMK Negeri';
+  document.getElementById('page-judul').textContent=h.judul;
+  document.getElementById('page-crumb').textContent=h.judul;
+  // konten visual & html sama-sama dirender sebagai HTML (mode html memang untuk embed)
+  box.innerHTML=h.konten||'';
+}
+
 // ---------- INIT ----------
 document.addEventListener('DOMContentLoaded',()=>{
   loadShared();
   loadProfil(); loadGaleriPage(); loadBeritaPage(); loadBeritaDetail();
-  loadJurusanPage(); loadJurusanDetail();
+  loadJurusanPage(); loadJurusanDetail(); loadHalamanCustom();
 });

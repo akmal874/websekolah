@@ -13,6 +13,8 @@ Aplikasi ini pakai **HTML + CSS + JavaScript murni** (tanpa Next.js) dan **Supab
    Ini otomatis membuat semua tabel, keamanan (RLS), bucket gambar, dan data awal (termasuk 4 jurusan).
 5. Buka juga file `supabase-tambahan.sql`, salin isinya, tempel di query baru, klik **Run**.
    Ini menambah tabel Profil dan kolom detail jurusan untuk halaman-halaman terpisah.
+6. Buka file `supabase-tambahan2.sql`, salin isinya, tempel di query baru, klik **Run**.
+   Ini menambah tabel Halaman custom dan Pengaturan section beranda.
 
 ## B. Ambil kunci koneksi
 
@@ -87,8 +89,10 @@ smk-app/
 ├── berita.html           ← daftar semua berita
 ├── berita-detail.html    ← isi lengkap satu berita
 ├── galeri.html           ← galeri foto (dengan lightbox)
-├── supabase-setup.sql    ← jalankan sekali di Supabase
-├── supabase-tambahan.sql ← jalankan setelahnya (profil & detail)
+├── page.html             ← menampilkan halaman custom (page.html?slug=xxx)
+├── supabase-setup.sql    ← jalankan #1 di Supabase
+├── supabase-tambahan.sql ← jalankan #2 (profil & detail jurusan)
+├── supabase-tambahan2.sql← jalankan #3 (halaman custom & section beranda)
 ├── PANDUAN.md            ← file ini
 ├── css/
 │   ├── style.css         ← tampilan publik
@@ -105,6 +109,25 @@ smk-app/
     ├── index.html        ← login admin
     └── dashboard.html    ← panel admin
 ```
+
+## Fitur Dashboard (Super Admin)
+
+Selain kelola konten dasar, super admin punya kontrol tambahan:
+
+- **Menu Navigasi** — tambah/edit/hapus menu. Ada dropdown "pilih cepat halaman" agar mudah mengarahkan menu ke halaman yang ada (termasuk halaman custom).
+- **Halaman** — buat halaman sendiri (mis. Fasilitas, Ekstrakurikuler, Kontak). Dua mode:
+  - *Visual* — tulis teks biasa dengan tombol format (tebal, judul, list, link).
+  - *HTML* — tempel kode HTML/embed (Google Maps, YouTube, dll).
+  - Halaman tampil di `page.html?slug=nama-slug` dan bisa ditambahkan ke menu.
+- **Pengaturan Beranda** — atur bagian mana yang tampil di beranda (hero, statistik, jurusan, mitra, berita, galeri, PPDB), urutannya, dan judul tiap bagian.
+
+> **Catatan keamanan:** mode HTML pada halaman custom menyisipkan kode apa adanya. Hanya super admin yang bisa membuatnya (dijaga RLS), jadi jangan menjadikan pihak tak tepercaya sebagai super admin.
+
+## Cara membuat halaman baru + menambah ke menu
+
+1. Login super admin → menu **Halaman** → isi judul, slug, konten → **Simpan**.
+2. Masuk menu **Menu Navigasi** → di "pilih cepat halaman" pilih halaman custom tadi → **Simpan**.
+3. Menu langsung muncul di semua halaman publik.
 
 ## Struktur Menu (per halaman)
 
