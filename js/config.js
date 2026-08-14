@@ -4,8 +4,8 @@
 //  Cari di: Dashboard Supabase > Project Settings > API
 // ============================================================
 
-const SUPABASE_URL = "https://ofinlvtmhqtgubrmbegh.supabase.co";   // <-- gant
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9maW5sdnRtaHF0Z3Vicm1iZWdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1MjgwMDMsImV4cCI6MjEwMjEwNDAwM30.bG55dgV1q1bIxjokpxyjhiretlsesr-Qy4YINutQE6A";                 // <-- ganti (anon public key)
+const SUPABASE_URL = "https://XXXXXXXXXXXX.supabase.co";   // <-- ganti
+const SUPABASE_ANON_KEY = "eyXXXXXXXX...";                 // <-- ganti (anon public key)
 
 // Nama bucket Storage untuk upload gambar (buat di Supabase > Storage)
 const STORAGE_BUCKET = "media";
